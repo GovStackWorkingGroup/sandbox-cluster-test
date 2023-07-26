@@ -30,7 +30,7 @@ spec:
     spec:
       containers:
         - name: deploy-test-db
-          image: postgres:14
+          image: {{ .Values.registry }}/deploy-test:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 5432

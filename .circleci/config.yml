@@ -12,7 +12,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          version: 20.10.14
+          docker_layer_caching: true
       - aws-cli/setup:
           role-arn: "${AWS_CIRCLECI_ROLE_ARN}"
           aws-region: AWS_REGION
@@ -26,11 +26,16 @@ jobs:
           command: |
             aws eks update-kubeconfig --name ${EKS_CLUSTER}
       - run:
+          name: Build image
+          command: |
+            docker build -t ${CONTAINER_REGISTRY}/deploy-test:latest image
+            aws ecr get-login-password | docker login --username AWS --password-stdin ${CONTAINER_REGISTRY}
+            docker push ${CONTAINER_REGISTRY}/deploy-test:latest
+      - run:
           name: Install test chart
           command: |
-            helm install --debug --atomic --wait --create-namespace -n deploy-test deploy-test test
+            helm install --debug --atomic --wait --create-namespace -n deploy-test --set-string "registry=${CONTAINER_REGISTRY}" deploy-test test
             helm uninstall -n deploy-test deploy-test
-
 workflows:
   test:
     jobs:
