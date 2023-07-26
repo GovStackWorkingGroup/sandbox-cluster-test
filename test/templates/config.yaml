@@ -1,0 +1,14 @@
+---
+{{- $secret := (lookup "v1" "Secret" .Release.Namespace "test-config") }}
+apiVersion: v1
+kind: Secret
+metadata:
+  namespace: {{ .Release.Namespace }}
+  name: deploy-test
+{{- if $secret }}
+data:
+  dbPassword: {{ $secret.data.dbPassword }}
+{{- else }}
+stringData:
+  dbPassword: {{ randAlphaNum 32 | quote }}
+{{- end }}
