@@ -26,13 +26,13 @@ jobs:
       - run:
           name: Build image
           command: |
-            docker build -t ${CONTAINER_REGISTRY}/deploy-test:latest image
+            docker build -t ${CONTAINER_REGISTRY}/deploy-test:latest images
             aws ecr get-login-password | docker login --username AWS --password-stdin ${CONTAINER_REGISTRY}
             docker push ${CONTAINER_REGISTRY}/deploy-test:latest
       - run:
           name: Install test chart
           command: |
-            helm install --debug --atomic --wait --create-namespace -n deploy-test --set-string "registry=${CONTAINER_REGISTRY}" deploy-test test
+            helm install --debug --atomic --wait --create-namespace -n deploy-test --set-string "registry=${CONTAINER_REGISTRY}" deploy-test charts/test
             helm uninstall -n deploy-test deploy-test
 workflows:
   test:
