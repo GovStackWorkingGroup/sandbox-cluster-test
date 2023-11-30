@@ -21,6 +21,7 @@ jobs:
       - run:
           name: Update kubeconfig
           command: |
+            aws configure list
             aws eks update-kubeconfig --name ${EKS_CLUSTER}
       - run:
           name: Build image
