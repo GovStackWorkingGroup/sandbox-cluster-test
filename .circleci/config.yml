@@ -10,17 +10,16 @@ jobs:
       - checkout
       - setup_remote_docker:
           docker_layer_caching: true
+      - helm/install_helm_client:
+          version: v3.13.0
       - aws-cli/setup:
           role_arn: "${AWS_CIRCLECI_ROLE_ARN}"
           region: ${AWS_REGION}
-          profile_name: "playground"
-          role_session_name: deploy-test
-          session_duration: '1800'
-      - helm/install_helm_client:
-          version: v3.13.0
+          role_session_name: CircleCISession
+          session_duration: '1800'      
       - run:
           name: Update kubeconfig
-          command: |
+          command: |            
             aws configure list
             aws eks update-kubeconfig --name ${EKS_CLUSTER}
       - run:
