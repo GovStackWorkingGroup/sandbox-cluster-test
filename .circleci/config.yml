@@ -37,9 +37,12 @@ jobs:
             - run:
                 name: Install test chart
                 command: |
-                  helm install --debug --atomic --wait --create-namespace -n deploy-test \
-                   --set-string "registry=${CONTAINER_REGISTRY}" \                  
+                  helm install --debug --atomic --wait --create-namespace -n deploy-test \\
+                   --set-string "registry=${CONTAINER_REGISTRY}" \\
                    deploy-test charts/test
+            - run:
+                name: Uninstall test chart       
+                command: |
                   helm uninstall -n deploy-test deploy-test
 workflows:
   test:
