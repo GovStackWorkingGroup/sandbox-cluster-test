@@ -11,28 +11,36 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - helm/install_helm_client:
-          version: v3.13.0
-      - aws-cli/setup:
-          role_arn: "${AWS_CIRCLECI_ROLE_ARN}"
-          region: ${AWS_REGION}
-          role_session_name: CircleCISession
-          session_duration: '1800'      
-      - run:
-          name: Update kubeconfig
-          command: |            
-            aws configure list
-            aws eks update-kubeconfig --name ${EKS_CLUSTER}
+          version: v3.13.0      
       - run:
           name: Build image
           command: |
-            docker build -t ${CONTAINER_REGISTRY}/deploy-test:latest images
-            aws ecr get-login-password | docker login --username AWS --password-stdin ${CONTAINER_REGISTRY}
-            docker push ${CONTAINER_REGISTRY}/deploy-test:latest
-      - run:
-          name: Install test chart
-          command: |
-            helm install --debug --atomic --wait --create-namespace -n deploy-test --set-string "registry=${CONTAINER_REGISTRY}" deploy-test charts/test
-            helm uninstall -n deploy-test deploy-test
+            docker build -t ${CONTAINER_REGISTRY}/deploy-test:latest images          
+      - when:
+          condition:
+            equal: [ main, << pipeline.git.branch >> ]
+          steps:
+            - aws-cli/setup:
+                role_arn: "${AWS_CIRCLECI_ROLE_ARN}"
+                region: ${AWS_REGION}
+                role_session_name: CircleCISession
+                session_duration: '1800'      
+            - run:
+                name: Push to registy
+                command: |
+                  aws ecr get-login-password | docker login --username AWS --password-stdin ${CONTAINER_REGISTRY}
+                  docker push ${CONTAINER_REGISTRY}/deploy-test:latest
+            - run:
+                name: Update kubeconfig
+                command: |            
+                  aws eks update-kubeconfig --name ${EKS_CLUSTER}  
+            - run:
+                name: Install test chart
+                command: |
+                  helm install --debug --atomic --wait --create-namespace -n deploy-test \
+                   --set-string "registry=${CONTAINER_REGISTRY}" \                  
+                   deploy-test charts/test
+                  helm uninstall -n deploy-test deploy-test
 workflows:
   test:
     jobs:
